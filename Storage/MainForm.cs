@@ -541,7 +541,6 @@ namespace Storage
         private void buttonChangeGoods_Click(object sender, EventArgs e)
         {
             Goods goods = new Goods();
-            DataGridViewRow row = dataGridViewGoods.CurrentRow;
 
             if (dataGridViewGoods.SelectedRows.Count == 0)
             {
@@ -557,6 +556,8 @@ namespace Storage
             }
             else if (dataGridViewGoods.SelectedRows.Count == 1 && dataGridViewGoods.CurrentRow != null)
             {
+                DataGridViewRow row = dataGridViewGoods.CurrentRow;
+
                 goods.Type_goods_ID = AddIDFromDb("SELECT ID FROM Type_Goods WHERE Type_goods = @chooseID", row, "Type Goods");
                 goods.Provider_ID = AddIDFromDb($"SELECT ID FROM Providers WHERE Provider_name = @chooseID", row, "Provider");
 
@@ -586,7 +587,6 @@ namespace Storage
 
         private void UpdateDataToDb(object obj, DataGridViewRow row)
         {
-
             using (SqlConnection conn = new SqlConnection(connStr))
             {
                 try
@@ -742,6 +742,164 @@ namespace Storage
                 string query = "select P.Id, P.Provider_name AS [Provider] from Providers P";
                 DownloadDataFromDB(query, dataGridViewProviders);
             }
+        }
+
+        private void DeleteDataFromDb(string str, DataGridViewRow row)
+        {
+            using (SqlConnection conn = new SqlConnection(connStr))
+            {
+                try
+                {
+                    conn?.Open();
+
+                    string query = string.Empty, typeGoods = string.Empty, provider = string.Empty;
+                    if (str == "Goods")
+                    {
+                        query = "DELETE FROM Goods WHERE Id = @id";
+
+                    }
+                    else if (str == "Type Goods")
+                    {
+                        query = "DELETE FROM Type_Goods WHERE Id = @id";
+                        typeGoods = DownloadNameByIdFromDb($"SELECT TG.Type_Goods FROM Type_goods TG WHERE TG.Id = " +
+                                                                  $"(SELECT Type_goods_ID FROM Goods WHERE Id = {row.Cells["Id"].Value})");
+                    }
+                    else if (str == "Provider")
+                    {
+                        query = "DELETE FROM Providers WHERE Id = @id";
+                        provider = DownloadNameByIdFromDb($"SELECT P.Provider_name FROM Providers P WHERE P.Id = " +
+                                                                 $"(SELECT Provider_ID FROM Goods WHERE Id = {row.Cells["Id"].Value})");
+                    }
+
+                    if (!string.IsNullOrEmpty(typeGoods))
+                    {
+                        MessageBox.Show($"Неможливо видалити запис, оскільки в таблиці Goods є товари з типом {typeGoods}.", "Помилка видалення запису", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        return;
+                    }
+
+                    if (!string.IsNullOrEmpty(provider))
+                    {
+                        MessageBox.Show($"Неможливо видалити запис, оскільки в таблиці Goods є товари від постачальника {provider}.", "Помилка видалення запису", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        return;
+                    }
+                    SqlCommand command = new SqlCommand(query, conn);
+                    command.Parameters.AddWithValue("@id", row.Cells["Id"].Value);
+                    command.ExecuteNonQuery();
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show(ex.Message);
+                }
+                finally
+                {
+                    conn.Close(); 
+                }
+            }
+        }
+
+        private void buttonDeleteGoods_Click(object sender, EventArgs e)
+        {
+            if (dataGridViewGoods.SelectedRows.Count == 0 || dataGridViewGoods.SelectedRows.Count > 1)
+            {
+                MessageBox.Show("Оберіть рядок з даними, який хочете видалити!", "Error!", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            else if (dataGridViewGoods.SelectedRows.Count == 1 && dataGridViewGoods.CurrentRow == null)
+            {
+                MessageBox.Show("Ви обрали порожній рядок", "Error!", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            else if (dataGridViewGoods.SelectedRows.Count == 1 && dataGridViewGoods.CurrentRow != null)
+            {
+                DataGridViewRow row = dataGridViewGoods.CurrentRow;
+
+                DialogResult result = MessageBox.Show("Ви точно хочете видалити цей запис?", "Видалення запису", MessageBoxButtons.OKCancel, MessageBoxIcon.Question);
+                if(result == DialogResult.OK)
+                {
+                    DeleteDataFromDb("Goods", row);
+
+                    string query = "SELECT G.Id, G.Name_goods AS [Name goods], TG.Type_goods AS [Type goods], " +
+                                   "P.Provider_name AS [Provider], G.Quantity_goods AS [Quantity], G.Prime_cost AS [Prime cost], " +
+                                   "G.Date_delivery AS [Date delivery] " +
+                                   "FROM Goods G " +
+                                   "JOIN Type_Goods TG ON TG.Id=G.type_goods_ID " +
+                                   "JOIN Providers P ON P.Id=G.provider_ID";
+                    DownloadDataFromDB(query, dataGridViewType_Goods);
+                }
+            }
+        }
+
+        private void buttonDeleteType_Click(object sender, EventArgs e)
+        {
+            if (dataGridViewType_Goods.SelectedRows.Count == 0 || dataGridViewType_Goods.SelectedRows.Count > 1)
+            {
+                MessageBox.Show("Оберіть рядок з даними, які хочете видалити!", "Error!", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            else if (dataGridViewType_Goods.SelectedRows.Count == 1 && dataGridViewType_Goods.CurrentRow == null)
+            {
+                MessageBox.Show("Ви обрали порожній рядок", "Error!", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            else if (dataGridViewType_Goods.SelectedRows.Count == 1 && dataGridViewType_Goods.CurrentRow != null)
+            {
+                DataGridViewRow row = dataGridViewType_Goods.CurrentRow;
+
+                DialogResult result = MessageBox.Show("Ви точно хочете видалити цей запис?", "Видалення запису", MessageBoxButtons.OKCancel, MessageBoxIcon.Question);
+                if (result == DialogResult.OK)
+                {
+                    DeleteDataFromDb("Type Goods", row);
+
+                    string query = "select TG.Id, TG.Type_goods AS [Type goods] from Type_Goods TG";
+
+                    DownloadDataFromDB(query, dataGridViewType_Goods);
+                }
+            }
+        }
+
+        private void buttonDeleteProvider_Click(object sender, EventArgs e)
+        {
+            if (dataGridViewProviders.SelectedRows.Count == 0 || dataGridViewProviders.SelectedRows.Count > 1)
+            {
+                MessageBox.Show("Оберіть рядок з даними, який хочете видалити!", "Error!", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            else if (dataGridViewProviders.SelectedRows.Count == 1 && dataGridViewProviders.CurrentRow == null)
+            {
+                MessageBox.Show("Ви обрали порожній рядок", "Error!", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            else if (dataGridViewProviders.SelectedRows.Count == 1 && dataGridViewProviders.CurrentRow != null)
+            {
+                DataGridViewRow row = dataGridViewProviders.CurrentRow;
+
+                DialogResult result = MessageBox.Show("Ви точно хочете видалити цей запис?", "Видалення запису", MessageBoxButtons.OKCancel, MessageBoxIcon.Question);
+                if (result == DialogResult.OK)
+                {
+                    DeleteDataFromDb("Provider", row);
+
+                    string query = "select P.Id, P.Provider_name AS [Provider] from Providers P";
+                    DownloadDataFromDB(query, dataGridViewProviders);
+                }
+            }
+        }
+
+        private string DownloadNameByIdFromDb(string query)
+        {
+            using (SqlConnection conn = new SqlConnection(connStr))
+            {
+                try
+                {
+                    conn.Open();
+                    SqlCommand command = new SqlCommand(query, conn);
+                    object result = command.ExecuteScalar();
+                    return Convert.ToString(result);
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show(ex.Message);
+                }
+                finally
+                {
+                    conn.Close();
+                }
+            }
+
+            return string.Empty;
         }
     }
 }

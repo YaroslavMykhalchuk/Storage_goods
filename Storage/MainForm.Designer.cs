@@ -120,6 +120,7 @@
             this.buttonDeleteGoods.TabIndex = 3;
             this.buttonDeleteGoods.Text = "Видалити товар";
             this.buttonDeleteGoods.UseVisualStyleBackColor = true;
+            this.buttonDeleteGoods.Click += new System.EventHandler(this.buttonDeleteGoods_Click);
             // 
             // buttonChangeGoods
             // 
@@ -173,6 +174,7 @@
             this.buttonDeleteType.TabIndex = 3;
             this.buttonDeleteType.Text = "Видалити категорію";
             this.buttonDeleteType.UseVisualStyleBackColor = true;
+            this.buttonDeleteType.Click += new System.EventHandler(this.buttonDeleteType_Click);
             // 
             // buttonChangeType
             // 
@@ -235,6 +237,7 @@
             this.buttonDeleteProvider.TabIndex = 2;
             this.buttonDeleteProvider.Text = "Видалити постачальника";
             this.buttonDeleteProvider.UseVisualStyleBackColor = true;
+            this.buttonDeleteProvider.Click += new System.EventHandler(this.buttonDeleteProvider_Click);
             // 
             // buttonAddProvider
             // 
