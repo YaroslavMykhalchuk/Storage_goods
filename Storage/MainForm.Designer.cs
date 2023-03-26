@@ -182,6 +182,7 @@
             this.buttonChangeType.TabIndex = 2;
             this.buttonChangeType.Text = "Змінити дані";
             this.buttonChangeType.UseVisualStyleBackColor = true;
+            this.buttonChangeType.Click += new System.EventHandler(this.buttonChangeType_Click);
             // 
             // buttonAddType
             // 
@@ -224,6 +225,7 @@
             this.buttonChangeProvider.TabIndex = 3;
             this.buttonChangeProvider.Text = "Змінити дані";
             this.buttonChangeProvider.UseVisualStyleBackColor = true;
+            this.buttonChangeProvider.Click += new System.EventHandler(this.buttonChangeProvider_Click);
             // 
             // buttonDeleteProvider
             // 

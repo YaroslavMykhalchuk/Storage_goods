@@ -17,6 +17,18 @@ namespace Storage
         {
             InitializeComponent();
             this.provider = provider;
+
+            if (provider.Provider_name != null)
+            {
+                Text = "Редагувати";
+                labelAddProvider.Text = "Змінити назву постачальника:";
+                textBoxAddProvider.Text = provider.Provider_name;
+            }
+            else
+            {
+                Text = "Додати постачальника";
+                labelAddProvider.Text = "Введіть назву постачальника:";
+            }
         }
 
         private void buttonOk_Click(object sender, EventArgs e)

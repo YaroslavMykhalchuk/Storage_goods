@@ -18,6 +18,18 @@ namespace Storage
         {
             InitializeComponent();
             this.typeGoods = typeGoods;
+
+            if (typeGoods.Type_goods != null)
+            {
+                Text = "Редагування типу товару";
+                labelAddType.Text = "Відредагуйте тип товару:";
+                textBoxAddType.Text = typeGoods.Type_goods;
+            }
+            else
+            {
+                Text = "Додати тип товару";
+                labelAddType.Text = "Введіть новий тип товару:";
+            }
         }
 
         private void buttonOK_Click(object sender, EventArgs e)

@@ -417,11 +417,10 @@ namespace Storage
             if (addTypeGoods.ShowDialog() == DialogResult.OK)
             {
                 UploadDataToDb(typeGoods);
-
-                string query = "select TG.Id, TG.Type_goods AS [Type goods] from Type_Goods TG";
-
-                DownloadDataFromDB(query, dataGridViewType_Goods);
             }
+            string query = "select TG.Id, TG.Type_goods AS [Type goods] from Type_Goods TG";
+
+            DownloadDataFromDB(query, dataGridViewType_Goods);
         }
 
         private void buttonAddProvider_Click(object sender, EventArgs e)
@@ -432,10 +431,9 @@ namespace Storage
             if (addProvider.ShowDialog() == DialogResult.OK)
             {
                 UploadDataToDb(provider);
-
-                string query = "select P.Id, P.Provider_name AS [Provider] from Providers P";
-                DownloadDataFromDB(query, dataGridViewProviders);
             }
+            string query = "select P.Id, P.Provider_name AS [Provider] from Providers P";
+            DownloadDataFromDB(query, dataGridViewProviders);
         }
 
         private void buttonAddGoods_Click(object sender, EventArgs e)
@@ -446,15 +444,14 @@ namespace Storage
             if (addGoods.ShowDialog() == DialogResult.OK)
             {
                 UploadDataToDb(goods);
-
-                string query = "SELECT G.Id, G.Name_goods AS [Name goods], TG.Type_goods AS [Type goods], " +
-                               "P.Provider_name AS [Provider], G.Quantity_goods AS [Quantity], G.Prime_cost AS [Prime cost], " +
-                               "G.Date_delivery AS [Date delivery] " +
-                               "FROM Goods G " +
-                               "JOIN Type_Goods TG ON TG.Id=G.type_goods_ID " +
-                               "JOIN Providers P ON P.Id=G.provider_ID";
-                DownloadDataFromDB(query, dataGridViewType_Goods);
             }
+            string query = "SELECT G.Id, G.Name_goods AS [Name goods], TG.Type_goods AS [Type goods], " +
+               "P.Provider_name AS [Provider], G.Quantity_goods AS [Quantity], G.Prime_cost AS [Prime cost], " +
+               "G.Date_delivery AS [Date delivery] " +
+               "FROM Goods G " +
+               "JOIN Type_Goods TG ON TG.Id=G.type_goods_ID " +
+               "JOIN Providers P ON P.Id=G.provider_ID";
+            DownloadDataFromDB(query, dataGridViewType_Goods);
         }
 
         private void UploadDataToDb(object obj)
@@ -508,11 +505,6 @@ namespace Storage
                     conn?.Close();
                 }
             }
-        }
-
-        private void UpdateDataInDb(DataGridView dataGridView, object obj)
-        {
-            
         }
 
         private int AddIDFromDb(string query, DataGridViewRow row, string str)
@@ -574,17 +566,25 @@ namespace Storage
                 goods.Quantity_goods = Convert.ToInt32(row.Cells["Quantity"].Value);
                 goods.Prime_cost = Convert.ToInt32(row.Cells["Prime cost"].Value);
                 goods.Date_delivery = Convert.ToDateTime(row.Cells["Date delivery"].Value);
-            }
 
-            AddGoods addGoods = new AddGoods(goods);
+                AddGoods addGoods = new AddGoods(goods);
 
-            if (addGoods.ShowDialog() == DialogResult.OK)
-            {
+                if (addGoods.ShowDialog() == DialogResult.OK)
+                {
+                    UpdateDataToDb(goods, row);
 
+                    string query = "SELECT G.Id, G.Name_goods AS [Name goods], TG.Type_goods AS [Type goods], " +
+                                   "P.Provider_name AS [Provider], G.Quantity_goods AS [Quantity], G.Prime_cost AS [Prime cost], " +
+                                   "G.Date_delivery AS [Date delivery] " +
+                                   "FROM Goods G " +
+                                   "JOIN Type_Goods TG ON TG.Id=G.type_goods_ID " +
+                                   "JOIN Providers P ON P.Id=G.provider_ID";
+                    DownloadDataFromDB(query, dataGridViewType_Goods);
+                }
             }
         }
 
-        private void UploadChangedDataToDb(object obj)
+        private void UpdateDataToDb(object obj, DataGridViewRow row)
         {
 
             using (SqlConnection conn = new SqlConnection(connStr))
@@ -593,7 +593,81 @@ namespace Storage
                 {
                     conn?.Open();
 
+                    if (obj is Goods)
+                    {
+                        Goods goods = (Goods)obj;
+                        string query = "UPDATE Goods " +
+                                       "SET " +
+                                       "Name_goods = @name, " +
+                                       "Type_goods_ID = @typeId, " +
+                                       "Provider_ID = @providerId, " +
+                                       "Quantity_goods = @quantity, " +
+                                       "Prime_cost = @cost, " +
+                                       "Date_delivery = @date " +
+                                      $"WHERE Id = {row.Cells["Id"].Value}";
+                        SqlCommand command = new SqlCommand(query, conn);
+                        command.Parameters.AddWithValue("@name", goods.Name_goods);
+                        command.Parameters.AddWithValue("@typeId", goods.Type_goods_ID);
+                        command.Parameters.AddWithValue("@providerId", goods.Provider_ID);
+                        command.Parameters.AddWithValue("@quantity", goods.Quantity_goods);
+                        command.Parameters.AddWithValue("@cost", goods.Prime_cost);
+                        command.Parameters.AddWithValue("@date", goods.Date_delivery);
 
+                        int result = command.ExecuteNonQuery();
+
+                        if (result > 0)
+                        {
+                            MessageBox.Show("Запис успішно оновлено!");
+                        }
+                        else
+                        {
+                            MessageBox.Show("Не вдалося оновити запис!");
+                        }
+                    }
+                    else if (obj is TypeGoods)
+                    {
+                        TypeGoods typeGoods = (TypeGoods)obj;
+
+                        string query = "UPDATE Type_Goods " +
+                                       "SET " +
+                                       "Type_goods = @type " +
+                                      $"WHERE Id = {row.Cells["Id"].Value}";
+                        SqlCommand command = new SqlCommand(query, conn);
+                        command.Parameters.AddWithValue("@type", typeGoods.Type_goods);
+
+                        int result = command.ExecuteNonQuery();
+
+                        if (result > 0)
+                        {
+                            MessageBox.Show("Запис успішно оновлено!");
+                        }
+                        else
+                        {
+                            MessageBox.Show("Не вдалося оновити запис!");
+                        }
+                    }
+                    else if (obj is Provider)
+                    {
+                        Provider provider = (Provider)obj;
+
+                        string query = "UPDATE Providers " +
+                                       "SET " +
+                                       "Provider_name = @provider " +
+                                      $"WHERE Id = {row.Cells["Id"].Value}";
+                        SqlCommand command = new SqlCommand(query, conn);
+                        command.Parameters.AddWithValue("@provider", provider.Provider_name);
+
+                        int result = command.ExecuteNonQuery();
+
+                        if (result > 0)
+                        {
+                            MessageBox.Show("Запис успішно оновлено!");
+                        }
+                        else
+                        {
+                            MessageBox.Show("Не вдалося оновити запис!");
+                        }
+                    }
                 }
                 catch (Exception ex)
                 {
@@ -603,6 +677,70 @@ namespace Storage
                 {
                     conn?.Close();
                 }
+            }
+        }
+
+        private void buttonChangeType_Click(object sender, EventArgs e)
+        {
+            if (dataGridViewType_Goods.SelectedRows.Count == 0)
+            {
+                MessageBox.Show("Оберіть рядок з даними, які хочете змінити!", "Error!", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            else if (dataGridViewType_Goods.SelectedRows.Count > 1)
+            {
+                MessageBox.Show("Оберіть 1 рядок з даними, які хочете змінити!", "Error!", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            else if (dataGridViewType_Goods.SelectedRows.Count == 1 && dataGridViewType_Goods.CurrentRow == null)
+            {
+                MessageBox.Show("Ви обрали порожній рядок", "Error!", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            else if (dataGridViewType_Goods.SelectedRows.Count == 1 && dataGridViewType_Goods.CurrentRow != null)
+            {
+                TypeGoods typeGoods = new TypeGoods();
+                DataGridViewRow row = dataGridViewType_Goods.CurrentRow;
+
+                typeGoods.Type_goods = row.Cells["Type goods"].Value.ToString();
+                AddTypeGoods addTypeGoods = new AddTypeGoods(typeGoods);
+
+                if (addTypeGoods.ShowDialog() == DialogResult.OK)
+                {
+                    UpdateDataToDb(typeGoods, row);
+                }
+                string query = "select TG.Id, TG.Type_goods AS [Type goods] from Type_Goods TG";
+
+                DownloadDataFromDB(query, dataGridViewType_Goods);
+
+            }
+        }
+
+        private void buttonChangeProvider_Click(object sender, EventArgs e)
+        {
+            if (dataGridViewProviders.SelectedRows.Count == 0)
+            {
+                MessageBox.Show("Оберіть рядок з даними, які хочете змінити!", "Error!", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            else if (dataGridViewProviders.SelectedRows.Count > 1)
+            {
+                MessageBox.Show("Оберіть 1 рядок з даними, які хочете змінити!", "Error!", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            else if (dataGridViewProviders.SelectedRows.Count == 1 && dataGridViewProviders.CurrentRow == null)
+            {
+                MessageBox.Show("Ви обрали порожній рядок", "Error!", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            else if (dataGridViewProviders.SelectedRows.Count == 1 && dataGridViewProviders.CurrentRow != null)
+            {
+                Provider provider = new Provider();
+                DataGridViewRow row = dataGridViewProviders.CurrentRow;
+
+                provider.Provider_name = row.Cells["Provider"].Value.ToString();
+                AddProvider addProvider = new AddProvider(provider);
+
+                if (addProvider.ShowDialog() == DialogResult.OK)
+                {
+                    UpdateDataToDb(provider, row);
+                }
+                string query = "select P.Id, P.Provider_name AS [Provider] from Providers P";
+                DownloadDataFromDB(query, dataGridViewProviders);
             }
         }
     }
